@@ -1,0 +1,51 @@
+---
+import type { PhotoWithRatio, Photo } from "../types/photo";
+import photosMetadata from "../content/photos/metadata.json";
+import { Image } from "astro:assets";
+import { lazy } from "astro:schema";
+
+
+const images = import.meta.glob<{ default: ImageMetadata }>('../assets/photos/*.{jpg,jpeg}', { eager: true })
+
+console.log('esto es una prueba' ,images);
+console.log('esto es una prueba 2' ,photosMetadata);
+
+// Procesar metadata y combinar con las imágenes importadas
+const photos: PhotoWithRatio[] = photosMetadata.map((photo: Photo) => {
+  const imagePath = `../assets/photos/${photo.filename}`;
+  const imageModule = images[imagePath];
+  console.log('imageModule', imageModule.default);
+
+  if (!imageModule) {
+    console.warn(`⚠️ Imagen no encontrada: ${photo.filename}`);
+    return null;
+  }
+
+  return {
+    ...photo,
+    aspectRatio: photo.width / photo.height,
+    src: imageModule.default,
+  };
+}).filter(Boolean) as PhotoWithRatio[];
+
+console.log(`✓ ${photos.length} fotos cargadas`);
+
+---
+
+<section class="gap-1 columns-2 lg:columns-3 xl:columns-6 p-4 lg:p-6">
+  {photos.map((photo) => (
+    <div data-photo-id={photo.id} class="group mb-1 break-inside-avoid cursor-pointer">
+      <div class="relative overflow-hidden">
+        <Image
+          src={photo.src}
+          alt={photo.alt || `Photo ${photo.id}`}
+          width={photo.width}
+          height={photo.height}
+          loading="lazy"
+          format="avif"
+          class="block w-full h-auto group-hover:scale-105 transition-transform duration-500 ease-out"
+        />
+      </div>
+    </div>
+  ))}
+</section>
