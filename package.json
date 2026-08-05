@@ -8,9 +8,16 @@
     "preview": "astro preview",
     "astro": "astro"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ]
+  },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.17",
     "astro": "^5.16.2",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4.1.17"
   }
 }

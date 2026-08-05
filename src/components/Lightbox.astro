@@ -1,0 +1,240 @@
+---
+import { getImage } from "astro:assets";
+import { photos } from "@/utils/photos";
+
+/** Ancho máximo del visor. Las miniaturas de la galería son mucho más
+ *  pequeñas, así que aquí generamos una versión aparte de cada foto. */
+const MAX_WIDTH = 2000;
+
+const slides = await Promise.all(
+    photos.map(async (photo) => {
+        const width = Math.min(photo.width, MAX_WIDTH);
+        const height = Math.round(width / photo.aspectRatio);
+        const image = await getImage({
+            src: photo.src,
+            format: "avif",
+            width,
+            height,
+        });
+
+        return { src: image.src, width, height, alt: photo.alt };
+    }),
+);
+---
+
+<script
+    type="application/json"
+    id="lightbox-data"
+    set:html={JSON.stringify(slides)}
+/>
+
+<dialog
+    id="lightbox"
+    aria-label="Photo viewer"
+    class="m-0 h-full max-h-full w-full max-w-full bg-paper/98 p-0 text-ink backdrop:bg-black/60"
+>
+    <!-- El top layer del <dialog> queda por encima de cualquier z-index, así que
+         el cursor del Layout no se ve aquí: necesita su propia copia dentro. -->
+    <div data-xray-cursor aria-hidden="true"></div>
+
+    <div class="relative flex h-full w-full flex-col">
+        <div class="flex items-center justify-between px-4 py-3 lg:px-6">
+            <p
+                id="lightbox-counter"
+                aria-live="polite"
+                class="font-serif text-sm tabular-nums text-muted"
+            >
+            </p>
+
+            <button
+                id="lightbox-close"
+                type="button"
+                aria-label="Close viewer"
+                class="rounded-full p-2 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
+            >
+                <svg
+                    class="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
+                    <path d="M6 6l12 12M18 6L6 18"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- min-h-0 deja que la imagen se encoja dentro del flex en vez de
+             desbordar la altura de la pantalla. -->
+        <div
+            class="flex min-h-0 flex-1 items-center justify-center px-4 pb-6 sm:px-16 lg:px-20"
+        >
+            <img
+                id="lightbox-image"
+                alt=""
+                class="max-h-full max-w-full object-contain"
+            />
+        </div>
+
+        <button
+            id="lightbox-prev"
+            type="button"
+            aria-label="Previous photo"
+            class="absolute top-1/2 left-1 -translate-y-1/2 rounded-full p-2 transition-colors hover:bg-black/10 sm:left-3 dark:hover:bg-white/10"
+        >
+            <svg
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+            >
+                <path d="M15 5l-7 7 7 7"></path>
+            </svg>
+        </button>
+
+        <button
+            id="lightbox-next"
+            type="button"
+            aria-label="Next photo"
+            class="absolute top-1/2 right-1 -translate-y-1/2 rounded-full p-2 transition-colors hover:bg-black/10 sm:right-3 dark:hover:bg-white/10"
+        >
+            <svg
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+            >
+                <path d="M9 5l7 7-7 7"></path>
+            </svg>
+        </button>
+    </div>
+</dialog>
+
+<script>
+    interface Slide {
+        src: string;
+        width: number;
+        height: number;
+        alt: string;
+    }
+
+    const dialog = document.getElementById("lightbox") as HTMLDialogElement | null;
+    const data = document.getElementById("lightbox-data");
+    const image = document.getElementById("lightbox-image") as HTMLImageElement | null;
+    const counter = document.getElementById("lightbox-counter");
+    const gallery = document.getElementById("photo-gallery");
+
+    if (dialog && data?.textContent && image && counter && gallery) {
+        const slides: Slide[] = JSON.parse(data.textContent);
+        const total = String(slides.length).padStart(2, "0");
+        let index = 0;
+
+        /** El módulo hace que las flechas den la vuelta en los extremos. */
+        function show(next: number) {
+            index = (next + slides.length) % slides.length;
+            const slide = slides[index];
+
+            image!.src = slide.src;
+            image!.width = slide.width;
+            image!.height = slide.height;
+            image!.alt = slide.alt;
+            counter!.textContent = `${String(index + 1).padStart(2, "0")} / ${total}`;
+
+            // La siguiente y la anterior ya descargadas: así las flechas no parpadean.
+            preload(index + 1);
+            preload(index - 1);
+        }
+
+        function preload(position: number) {
+            const slide = slides[(position + slides.length) % slides.length];
+            const preloader = new Image();
+            preloader.src = slide.src;
+        }
+
+        function open(next: number) {
+            show(next);
+            dialog!.showModal();
+            document.documentElement.classList.add("lightbox-open");
+        }
+
+        // Delegación: un solo listener para las 30 fotos.
+        gallery.addEventListener("click", (event) => {
+            const trigger = (event.target as HTMLElement).closest<HTMLElement>(
+                "[data-photo-index]",
+            );
+            if (!trigger) return;
+            open(Number(trigger.dataset.photoIndex));
+        });
+
+        document
+            .getElementById("lightbox-close")
+            ?.addEventListener("click", () => dialog.close());
+        document
+            .getElementById("lightbox-prev")
+            ?.addEventListener("click", () => show(index - 1));
+        document
+            .getElementById("lightbox-next")
+            ?.addEventListener("click", () => show(index + 1));
+
+        // Click fuera: cualquier zona vacía cierra, pero la foto y los botones no.
+        dialog.addEventListener("click", (event) => {
+            const target = event.target as HTMLElement;
+            if (target === image || target.closest("button")) return;
+            dialog.close();
+        });
+
+        // Escape ya lo gestiona el <dialog> nativo; aquí solo las flechas.
+        dialog.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowRight") {
+                event.preventDefault();
+                show(index + 1);
+            } else if (event.key === "ArrowLeft") {
+                event.preventDefault();
+                show(index - 1);
+            }
+        });
+
+        let touchX = 0;
+        let touchY = 0;
+
+        dialog.addEventListener(
+            "touchstart",
+            (event) => {
+                touchX = event.changedTouches[0].clientX;
+                touchY = event.changedTouches[0].clientY;
+            },
+            { passive: true },
+        );
+
+        dialog.addEventListener(
+            "touchend",
+            (event) => {
+                const deltaX = event.changedTouches[0].clientX - touchX;
+                const deltaY = event.changedTouches[0].clientY - touchY;
+
+                // Gana el eje con más recorrido: horizontal navega, hacia abajo cierra.
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    if (Math.abs(deltaX) > 60) show(index + (deltaX < 0 ? 1 : -1));
+                } else if (deltaY > 80) {
+                    dialog.close();
+                }
+            },
+            { passive: true },
+        );
+
+        // El evento close cubre también el Escape nativo y el botón de cerrar.
+        dialog.addEventListener("close", () => {
+            document.documentElement.classList.remove("lightbox-open");
+        });
+    }
+</script>

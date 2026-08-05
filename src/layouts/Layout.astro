@@ -1,28 +1,114 @@
 ---
-import "../styles/global.css";
+import "@/styles/global.css";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import { profile } from "@/data/profile";
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+	title = profile.brand,
+	description = `Street and landscape photography with a vintage touch, by ${profile.name}. ${profile.city}, ${profile.country}.`,
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonical} />
+
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:locale" content="en_GB" />
+		<meta name="twitter:card" content="summary_large_image" />
+
+		<!-- Se aplica el tema antes de pintar: sin esto la página aparece en claro
+		     y salta a oscuro cuando arranca el JS del header. -->
+		<script is:inline>
+			(() => {
+				const saved = localStorage.getItem("theme");
+				const prefersDark = window.matchMedia(
+					"(prefers-color-scheme: dark)",
+				).matches;
+				if (saved === "dark" || (!saved && prefersDark)) {
+					document.documentElement.classList.add("dark");
+				}
+			})();
+		</script>
 	</head>
-	<body>
-		<main class="">
+	<body class="flex min-h-full flex-col font-sans antialiased">
+		<!-- Cursor rayos X -->
+		<div data-xray-cursor aria-hidden="true"></div>
+
+		<Header />
+
+		<main class="flex-1">
 			<slot />
 		</main>
+
+		<Footer />
 	</body>
 </html>
 
-<style>
+<style is:global>
 	html,
 	body {
 		margin: 0;
 		width: 100%;
-		height: 100%;
+		min-height: 100%;
+	}
+
+	[data-xray-cursor] {
+		position: fixed;
+		width: 25px;
+		height: 25px;
+		border-radius: 50%;
+		pointer-events: none;
+		z-index: 9999;
+		transform: translate(-50%, -50%);
+		border: 2px solid rgba(128, 128, 128, 0.5);
+		backdrop-filter: invert(1) blur(1px);
+		-webkit-backdrop-filter: invert(1) blur(1px);
+		opacity: 0;
+		transition: opacity 0.2s ease;
+	}
+
+	body:hover [data-xray-cursor] {
+		opacity: 1;
 	}
 </style>
+
+<script>
+	// Puede haber más de uno: el lightbox lleva su propia copia porque el top
+	// layer del <dialog> tapa al del Layout.
+	const cursors = document.querySelectorAll<HTMLElement>('[data-xray-cursor]');
+
+	document.addEventListener('mousemove', (e) => {
+		cursors.forEach((cursor) => {
+			cursor.style.left = e.clientX + 'px';
+			cursor.style.top = e.clientY + 'px';
+		});
+	});
+
+	// Ocultar cursor cuando sale de la ventana
+	document.addEventListener('mouseleave', () => {
+		cursors.forEach((cursor) => (cursor.style.opacity = '0'));
+	});
+
+	document.addEventListener('mouseenter', () => {
+		cursors.forEach((cursor) => (cursor.style.opacity = '1'));
+	});
+</script>

@@ -1,0 +1,255 @@
+---
+import { Image } from "astro:assets";
+import Layout from "@/layouts/Layout.astro";
+import Divider from "@/components/Divider.astro";
+import { profile } from "@/data/profile";
+import { photos } from "@/utils/photos";
+
+const heroPhoto = photos[0];
+const stripPhotos = photos.slice(1, 5);
+---
+
+<Layout
+	title={`About — ${profile.brand}`}
+	description={`${profile.name}, full stack developer and photographer based in ${profile.city}. Street and landscape photography with a vintage touch.`}
+>
+	<!-- Presentación -->
+	<section class="mx-auto max-w-5xl px-4 pt-12 pb-16 lg:px-6 lg:pt-20">
+		<div class="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16">
+			<div>
+				<p class="eyebrow">About</p>
+				<h1
+					class="mt-4 font-serif text-4xl leading-[1.05] tracking-tight text-balance sm:text-5xl lg:text-6xl"
+				>
+					Hi, I'm {profile.name}.
+				</h1>
+
+				<p class="mt-6 text-lg leading-relaxed text-pretty">
+					Born in {profile.city} in '{profile.birthYear.toString().slice(2)}.
+					Full stack developer with {profile.yearsOfExperience} years of
+					experience and a fairly obvious weakness for the frontend. Since April
+					2025 I've also been heading out with a camera in hand, and I still
+					haven't found a way to stop.
+				</p>
+
+				<p class="mt-4 leading-relaxed text-muted text-pretty">
+					What you'll find here is whatever I come across along the way: my
+					city, the odd trip, and a lot of late afternoon light.
+				</p>
+
+				<div class="mt-8 flex flex-wrap items-center gap-4">
+					<a
+						href="/"
+						class="border border-ink px-5 py-2.5 text-sm transition-colors hover:bg-ink hover:text-paper"
+					>
+						View the gallery
+					</a>
+					<a
+						href={`mailto:${profile.email}`}
+						class="text-sm text-muted underline decoration-line underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
+					>
+						Get in touch
+					</a>
+				</div>
+			</div>
+
+			<figure class="relative">
+				<Image
+					src={heroPhoto.src}
+					alt={heroPhoto.alt}
+					width={heroPhoto.width}
+					height={heroPhoto.height}
+					format="avif"
+					loading="eager"
+					class="aspect-4/5 w-full object-cover"
+				/>
+				<figcaption class="mt-3 text-xs text-muted">
+					Canon EOS R10 · {profile.city}
+				</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<!-- Cifras de un vistazo -->
+	<section class="mx-auto max-w-5xl px-4 lg:px-6">
+		<dl
+			class="grid grid-cols-2 gap-8 border-y border-line py-8 sm:grid-cols-4"
+		>
+			{
+				[
+					{ value: profile.yearsOfExperience, label: "years coding" },
+					{ value: photos.length, label: "photos published" },
+					{ value: profile.locations.length, label: "places shot" },
+					{ value: profile.photographyStartYear, label: "first photo" },
+				].map(({ value, label }) => (
+					<div>
+						<dt class="sr-only">{label}</dt>
+						<dd class="font-serif text-4xl tabular-nums lg:text-5xl">
+							{value}
+						</dd>
+						<p class="mt-1 text-sm text-muted">{label}</p>
+					</div>
+				))
+			}
+		</dl>
+	</section>
+
+	<!-- El código -->
+	<section class="mx-auto max-w-5xl px-4 pt-16 lg:px-6">
+		<div class="grid gap-6 lg:grid-cols-[180px_1fr] lg:gap-12">
+			<h2 class="eyebrow pt-2">The code</h2>
+			<div class="max-w-2xl">
+				<p class="font-serif text-2xl leading-snug text-balance sm:text-3xl">
+					I work across the whole stack, but the frontend is where I actually
+					enjoy myself.
+				</p>
+				<p class="mt-5 leading-relaxed text-muted text-pretty">
+					It's the part where a technical decision turns into something someone
+					can see and touch — the moment code stops being logic and becomes an
+					experience. I obsess over the details almost nobody notices: how an
+					element enters, how long a transition lasts, where the white space
+					breathes.
+				</p>
+				<p class="mt-4 leading-relaxed text-muted text-pretty">
+					I suppose that's how I ended up with a camera in my hands. It's the
+					same impulse: composing something for someone else to look at.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<div class="mx-auto max-w-5xl px-4 py-16 lg:px-6">
+		<Divider />
+	</div>
+
+	<!-- La cámara -->
+	<section class="mx-auto max-w-5xl px-4 lg:px-6">
+		<div class="grid gap-6 lg:grid-cols-[180px_1fr] lg:gap-12">
+			<h2 class="eyebrow pt-2">The camera</h2>
+			<div class="grid max-w-3xl gap-10 sm:grid-cols-[1fr_260px] sm:gap-12">
+				<div>
+					<p class="font-serif text-2xl leading-snug text-balance sm:text-3xl">
+						Street and landscape photography, with a vintage touch I'm trying to
+						make my own.
+					</p>
+					<p class="mt-5 leading-relaxed text-muted text-pretty">
+						I've been shooting for {profile.timeShooting} and I'm still at the
+						stage where every outing teaches me something. The street is what
+						pulls me in: people walking through the frame without knowing it,
+						long shadows, scenes that last two seconds. And landscapes when
+						it's time to slow down.
+					</p>
+					<p class="mt-4 leading-relaxed text-muted text-pretty">
+						I'm still looking for a style of my own, and I know I'm not there
+						yet — but that search is the fun part.
+					</p>
+				</div>
+
+				<div>
+					<h3 class="eyebrow">Gear</h3>
+					<dl class="mt-4 text-sm">
+						{
+							profile.gear.map(({ label, value }) => (
+								<div class="flex flex-col gap-0.5 border-b border-line py-3">
+									<dt class="text-xs text-muted">{label}</dt>
+									<dd>{value}</dd>
+								</div>
+							))
+						}
+					</dl>
+					<p class="mt-4 text-xs leading-relaxed text-muted">
+						One body, one lens. The fewer decisions about what to carry, the
+						more time left to look.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Tira de fotos -->
+	<section class="mt-16 px-4 lg:px-6">
+		<div class="mx-auto grid max-w-5xl grid-cols-2 gap-1 sm:grid-cols-4">
+			{
+				stripPhotos.map((photo) => (
+					<Image
+						src={photo.src}
+						alt={photo.alt}
+						width={photo.width}
+						height={photo.height}
+						format="avif"
+						loading="lazy"
+						class="aspect-square w-full object-cover transition-opacity duration-500 hover:opacity-80"
+					/>
+				))
+			}
+		</div>
+	</section>
+
+	<!-- Lugares -->
+	<section class="mx-auto max-w-5xl px-4 pt-16 lg:px-6">
+		<div class="grid gap-6 lg:grid-cols-[180px_1fr] lg:gap-12">
+			<h2 class="eyebrow pt-2">Where</h2>
+			<div class="max-w-3xl">
+				<p class="max-w-2xl leading-relaxed text-muted text-pretty">
+					So far the gallery covers three places. The list will grow.
+				</p>
+				<ul class="mt-8 grid gap-px border border-line bg-line sm:grid-cols-3">
+					{
+						profile.locations.map((location) => (
+							<li class="bg-paper p-5">
+								<p class="font-serif text-xl">{location.name}</p>
+								<p class="mt-0.5 text-xs text-muted">{location.region}</p>
+								<p class="mt-3 text-sm leading-relaxed text-muted text-pretty">
+									{location.note}
+								</p>
+							</li>
+						))
+					}
+				</ul>
+			</div>
+		</div>
+	</section>
+
+	<div class="mx-auto max-w-5xl px-4 py-16 lg:px-6">
+		<Divider />
+	</div>
+
+	<!-- Pasiones -->
+	<section class="mx-auto max-w-5xl px-4 lg:px-6">
+		<div class="grid gap-6 lg:grid-cols-[180px_1fr] lg:gap-12">
+			<h2 class="eyebrow pt-2">Off the screen</h2>
+			<div class="max-w-2xl">
+				<p class="leading-relaxed text-muted text-pretty">
+					It's not all code and photos. The rest of my time goes to a few other
+					things:
+				</p>
+				<ul class="mt-6 flex flex-wrap gap-2">
+					{
+						profile.passions.map((passion) => (
+							<li class="border border-line px-3 py-1.5 text-sm text-muted">
+								{passion}
+							</li>
+						))
+					}
+				</ul>
+			</div>
+		</div>
+	</section>
+
+	<!-- Cierre -->
+	<section class="mx-auto max-w-5xl px-4 pt-20 lg:px-6">
+		<div class="border-t border-line pt-10">
+			<p
+				class="max-w-2xl font-serif text-2xl leading-snug text-balance sm:text-3xl"
+			>
+				If you made it this far, you should probably look at the photos.
+			</p>
+			<a
+				href="/"
+				class="mt-6 inline-block border border-ink px-5 py-2.5 text-sm transition-colors hover:bg-ink hover:text-paper"
+			>
+				Go to the gallery
+			</a>
+		</div>
+	</section>
+</Layout>

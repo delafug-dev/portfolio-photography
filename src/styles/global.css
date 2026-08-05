@@ -1,1 +1,138 @@
 @import "tailwindcss";
+
+/* Sin esto, las variantes dark: de Tailwind 4 siguen la preferencia del sistema
+   y se saltan el botón de tema. Así escuchan a la clase .dark del <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg-color: #f5f0e8;
+  --text-color: #1a1a1a;
+  --header-bg: #ede8df;
+  --muted-color: #6f675e;
+  --line-color: rgba(26, 26, 26, 0.14);
+  --accent-color: #8a6a4b;
+}
+
+:root.dark {
+  --bg-color: #1a1a1a;
+  --text-color: #f5f0e8;
+  --header-bg: #222020;
+  --muted-color: #a09890;
+  --line-color: rgba(245, 240, 232, 0.16);
+  --accent-color: #c9a06a;
+}
+
+/* @theme inline expone las variables de arriba como utilidades de Tailwind
+   (bg-paper, text-muted, border-line...) sin congelar su valor, así siguen
+   cambiando con el tema. */
+@theme inline {
+  --color-paper: var(--bg-color);
+  --color-surface: var(--header-bg);
+  --color-ink: var(--text-color);
+  --color-muted: var(--muted-color);
+  --color-line: var(--line-color);
+  --color-accent: var(--accent-color);
+
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+    Georgia, ui-serif, serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@layer components {
+  /* Antetítulo de sección: versalitas espaciadas, estilo editorial. */
+  .eyebrow {
+    font-size: 0.6875rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted-color);
+  }
+}
+
+/* Ocultar cursor del sistema en toda la página (lo sustituye #xray-cursor) */
+*,
+*::before,
+*::after,
+a,
+button,
+img,
+[role="button"],
+input,
+textarea,
+select {
+  cursor: none !important;
+}
+
+/* En táctil no hay puntero que seguir: devolvemos el cursor nativo para no
+   dejar sin señal visual a quien navegue con teclado o ratón conectado. */
+@media (pointer: coarse) {
+  *,
+  *::before,
+  *::after,
+  a,
+  button,
+  img,
+  [role="button"],
+  input,
+  textarea,
+  select {
+    cursor: auto !important;
+  }
+
+  [data-xray-cursor] {
+    display: none;
+  }
+}
+
+/* Reservar siempre el hueco de la barra de scroll: al abrir el lightbox se
+   bloquea el scroll y sin esto la galería daría un salto lateral. */
+html {
+  scrollbar-gutter: stable;
+}
+
+html.lightbox-open {
+  overflow: hidden;
+}
+
+#lightbox[open],
+#lightbox[open]::backdrop {
+  animation: lightbox-in 0.25s ease-out;
+}
+
+#lightbox[open] #lightbox-image {
+  animation: lightbox-image-in 0.3s ease-out;
+}
+
+@keyframes lightbox-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes lightbox-image-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+/* Foco visible siempre, aunque el cursor esté oculto. */
+:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
